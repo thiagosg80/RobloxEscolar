@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resultados — RobloxEscolarBackend</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<main class="page">
+
+  <!-- ── Cabeçalho ── -->
+  <header class="page-header">
+    <div class="logo-wrap">🎮</div>
+    <div>
+      <div class="page-title">RobloxEscolarBackend</div>
+      <div class="page-subtitle">
+        Resultados da Prova &mdash;
+        {{ total_alunos }} aluno{{ 's' if total_alunos != 1 else '' }}
+        &nbsp;·&nbsp; {{ total_questoes }} questões
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Cards de estatísticas ── -->
+  <section class="stats-grid">
+    <div class="stat-card blue">
+      <span class="stat-icon">👥</span>
+      <span class="stat-value">{{ total_alunos }}</span>
+      <span class="stat-label">Alunos</span>
+    </div>
+    <div class="stat-card yellow">
+      <span class="stat-icon">📊</span>
+      <span class="stat-value">{{ "%.1f"|format(stats.media) }}</span>
+      <span class="stat-label">Média da turma</span>
+    </div>
+    <div class="stat-card green">
+      <span class="stat-icon">✅</span>
+      <span class="stat-value">{{ stats.aprovados }}</span>
+      <span class="stat-label">Aprovados (&ge; 5)</span>
+    </div>
+    <div class="stat-card red">
+      <span class="stat-icon">❌</span>
+      <span class="stat-value">{{ stats.reprovados }}</span>
+      <span class="stat-label">Reprovados</span>
+    </div>
+    <div class="stat-card purple">
+      <span class="stat-icon">🏆</span>
+      <span class="stat-value">{{ "%.1f"|format(stats.maior_nota) }}</span>
+      <span class="stat-label">Maior nota</span>
+    </div>
+  </section>
+
+  <!-- ── Lista de alunos ── -->
+  <div class="section-heading">
+    <span class="section-title">Desempenho Individual</span>
+    <span class="section-badge">{{ total_alunos }} alunos</span>
+  </div>
+
+  {% if not resultados %}
+  <!-- Estado vazio -->
+  <div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <div class="empty-title">Nenhuma prova registrada ainda</div>
+    <div class="empty-desc">POST /trials para enviar a primeira prova</div>
+  </div>
+
+  {% else %}
+  <div class="alunos-list">
+    {% for r in resultados %}
+    {% set idx = loop.index0 %}
+
+    {% set pct_acertos = (r.acertos / total_questoes * 100) | round(1) %}
+    {% set pct_erros   = (r.erros   / total_questoes * 100) | round(1) %}
+
+    <div class="aluno-card" id="card-{{ idx }}">
+
+      <!-- Header clicável -->
+      <div class="aluno-header">
+
+        <!-- Ranking -->
+        {% if idx == 0 %}
+          <div class="rank-badge">🥇</div>
+        {% elif idx == 1 %}
+          <div class="rank-badge">🥈</div>
+        {% elif idx == 2 %}
+          <div class="rank-badge">🥉</div>
+        {% else %}
+          <div class="rank-number">{{ loop.index }}</div>
+        {% endif %}
+
+        <!-- Nome e meta -->
+        <div class="aluno-info">
+          <div class="aluno-nome">{{ r.nome }}</div>
+          <div class="aluno-meta">
+            {{ r.respondidas }}/{{ total_questoes }} respondidas
+            &nbsp;·&nbsp;
+            <span class="situacao-tag {{ 'aprovado' if r.situacao == 'Aprovado' else 'reprovado' }}">
+              {{ r.situacao }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Scores -->
+        <div class="aluno-scores">
+          <span class="score-pill acerto">✓ {{ r.acertos }} acerto{{ 's' if r.acertos != 1 else '' }}</span>
+          <span class="score-pill erro">✗ {{ r.erros }} erro{{ 's' if r.erros != 1 else '' }}</span>
+
+          {% if r.nota >= 7 %}
+            <span class="nota-chip nota-alta">{{ "%.1f"|format(r.nota) }}</span>
+          {% elif r.nota >= 5 %}
+            <span class="nota-chip nota-media">{{ "%.1f"|format(r.nota) }}</span>
+          {% else %}
+            <span class="nota-chip nota-baixa">{{ "%.1f"|format(r.nota) }}</span>
+          {% endif %}
+        </div>
+
+        <span class="toggle-icon">▼</span>
+      </div>
+
+      <!-- Barra de progresso -->
+      <div class="progress-wrap">
+        <div class="progress-labels">
+          <span>{{ r.acertos }} acertos ({{ pct_acertos }}%)</span>
+          <span>{{ r.erros }} erros ({{ pct_erros }}%)</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-acertos" style="width:0%" data-pct="{{ pct_acertos }}"></div>
+          <div class="progress-erros"   style="width:0%" data-pct="{{ pct_erros }}"></div>
+        </div>
+      </div>
+
+      <!-- Detalhe por questão (expande ao clicar) -->
+      <div class="aluno-detail">
+        <div class="detail-title">Respostas por questão</div>
+        <div class="questoes-grid">
+          {% for d in r.detalhes %}
+            {% if d.status == 'em_branco' %}
+              <div class="q-chip branco">
+                <span class="q-num">Q{{ d.questao }}</span>
+                <span class="q-resp">—</span>
+                <span class="q-gab">gab: {{ d.gabarito }}</span>
+              </div>
+
+            {% elif d.status == 'acerto' %}
+              <div class="q-chip acerto">
+                <span class="q-num">Q{{ d.questao }}</span>
+                <span class="q-icon">✅</span>
+                <span class="q-resp">{{ d.escolha }}</span>
+              </div>
+
+            {% else %}
+              <div class="q-chip erro">
+                <span class="q-num">Q{{ d.questao }}</span>
+                <span class="q-icon">❌</span>
+                <span class="q-resp">{{ d.escolha }}</span>
+                <span class="q-gab">gab: {{ d.gabarito }}</span>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+    </div><!-- .aluno-card -->
+    {% endfor %}
+  </div><!-- .alunos-list -->
+  {% endif %}
+
+</main>
+
+<script src="/static/show_all.js"></script>
+</body>
+</html>
