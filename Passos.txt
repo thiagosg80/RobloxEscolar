@@ -12,4 +12,5 @@ Nova aba no power shell
 
 
 
-Resultados: http://localhost:8000/trials/show-all
+Resultados:
+https://homalographic-graspingly-zariah.ngrok-free.dev/trials/show-all

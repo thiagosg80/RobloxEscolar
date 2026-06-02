@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastrar Prova — RobloxEscolarBackend</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .q-box { 
+      background: var(--surface); 
+      padding: 24px; 
+      border-radius: var(--radius-xl); 
+      border: 1px solid var(--border); 
+      margin-bottom: 20px; 
+    }
+    .alt-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    input[type="text"] { font-family: 'Fira Mono', monospace; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  </style>
+</head>
+<body>
+<main class="page">
+  <header class="page-header">
+    <div class="logo-wrap">🎮</div>
+    <div>
+      <div class="page-title">RobloxEscolarBackend</div>
+      <div class="page-subtitle">Configuração do Gabarito Oficial</div>
+    </div>
+  </header>
+
+  <form id="formProva" style="max-width: 800px; margin: 0 auto;">
+    <div class="input-group" style="margin-bottom: 32px;">
+      <label style="font-weight: 800; color: var(--text);">Nome da Prova</label>
+      <input type="text" id="nomeProva" placeholder="Ex: Avaliação Final de Robótica" required style="width: 100%; box-sizing: border-box;">
+    </div>
+
+    <div id="containerQuestoes"></div>
+
+    <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-weight: 800; background: var(--blue); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 40px;">
+      Registrar Prova no Sistema
+    </button>
+  </form>
+</main>
+
+<script>
+  const container = document.getElementById('containerQuestoes');
+  for(let i = 1; i <= 10; i++) {
+    container.innerHTML += `
+      <div class="q-box">
+        <h3 class="section-heading" style="margin-top:0;">Questão ${i}</h3>
+        <input type="text" class="enunciado" placeholder="Enunciado da questão..." required style="width:100%; box-sizing:border-box; margin-bottom:16px;">
+        <div class="alternativas-inputs">
+           ${['A','B','C','D','E'].map((l, idx) => `
+             <div class="alt-row">
+               <input type="radio" name="c_${i}" value="${idx}" required> 
+               <input type="text" class="alt-text" placeholder="Opção ${l}" style="flex:1;">
+             </div>
+           `).join('')}
+        </div>
+      </div>`;
+  }
+  document.getElementById('formProva').onsubmit = async (e) => {
+    e.preventDefault();
+    const questoes = Array.from(document.querySelectorAll('.q-box')).map(box => ({
+      enunciado: box.querySelector('.enunciado').value,
+      alternativas: Array.from(box.querySelectorAll('.alt-text')).map(input => input.value),
+      correta: parseInt(box.querySelector('input[type="radio"]:checked').value)
+    }));
+    await fetch('/prova/criar', { method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ nome_prova: document.getElementById('nomeProva').value, questoes })});
+    window.location.href = '/trials/show-all';
+  };
+</script>
+</body>
+</html>

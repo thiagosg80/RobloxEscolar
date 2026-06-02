@@ -1,54 +1,29 @@
-from typing import Dict
-from pydantic import BaseModel, field_validator, model_validator
-from config import GABARITO
+from typing import List, Dict
+from pydantic import BaseModel, model_validator
 
-
-class Trial(BaseModel):
-    """
-    Representa a entrega completa de um aluno:
-    um nome e um dicionário de { numero_questao: alternativa_escolhida }.
-
-    Exemplo de payload:
-    {
-        "nome": "Maria Silva",
-        "respostas": {
-            "1": "A",
-            "3": "B",
-            "7": "C"
-        }
-    }
-    """
-
-    nome: str
-    respostas: Dict[int, str]   # { numero_questao -> alternativa }
-
-    @field_validator("nome")
-    @classmethod
-    def nome_nao_vazio(cls, v: str) -> str:
-        v = v.strip()
-        if not v:
-            raise ValueError("O nome do aluno não pode ser vazio.")
-        return v
+class Questao(BaseModel):
+    enunciado: str
+    alternativas: List[str]  # Lista com 5 enunciados de alternativas
+    correta: int             # Índice da alternativa correta (0 a 4)
 
     @model_validator(mode="after")
-    def validar_respostas(self) -> "Trial":
-        questoes_invalidas = [q for q in self.respostas if q not in GABARITO]
-        if questoes_invalidas:
-            raise ValueError(
-                f"Questões inválidas: {sorted(questoes_invalidas)}. "
-                f"Questões aceitas: {sorted(GABARITO.keys())}"
-            )
-
-        alternativas_invalidas = {
-            q: a
-            for q, a in self.respostas.items()
-            if a.strip().upper() not in ("A", "B", "C", "D", "E")
-        }
-        if alternativas_invalidas:
-            raise ValueError(
-                f"Alternativas inválidas: {alternativas_invalidas}. Use A, B, C, D ou E."
-            )
-
-        # Normaliza todas as alternativas para maiúsculo
-        self.respostas = {q: a.strip().upper() for q, a in self.respostas.items()}
+    def validar_estrutura(self) -> "Questao":
+        if len(self.alternativas) != 5:
+            raise ValueError("Cada questão deve ter exatamente 5 alternativas.")
+        if not (0 <= self.correta <= 4):
+            raise ValueError("A alternativa correta deve ser um índice entre 0 e 4.")
         return self
+
+class Prova(BaseModel):
+    nome_prova: str
+    questoes: List[Questao]
+
+    @model_validator(mode="after")
+    def validar_total(self) -> "Prova":
+        if len(self.questoes) != 10:
+            raise ValueError("A prova deve ter exatamente 10 questões.")
+        return self
+
+class Trial(BaseModel):
+    nome: str
+    respostas: Dict[int, str] # {1: "A", 2: "B"...} mapeado para o índice da alternativa

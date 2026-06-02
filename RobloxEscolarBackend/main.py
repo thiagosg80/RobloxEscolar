@@ -2,38 +2,41 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-
-from config import TOTAL_QUESTOES
-from models import Trial
+from models import Prova, Trial
 from services import (
-    registrar_prova,
-    obter_todos_resultados,
-    calcular_estatisticas_turma,
+    registrar_nova_prova, 
+    registrar_respostas_aluno, 
+    obter_resultados, 
+    calcular_estatisticas_turma
 )
 
-app = FastAPI(title="RobloxEscolarBackend", version="1.0.0")
-
+app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+@app.post("/prova/criar")
+def criar_prova(prova: Prova):
+    registrar_nova_prova(prova)
+    return {"status": "ok"}
 
-@app.post("/trials", summary="Registrar prova completa de um aluno")
+@app.post("/trials")
 def post_trial(trial: Trial):
-    return registrar_prova(trial)
+    return registrar_respostas_aluno(trial)
 
+@app.get("/prova/nova", response_class=HTMLResponse)
+def get_form_prova(request: Request):
+    return templates.TemplateResponse(request=request, name="form_prova.html")
 
-@app.get("/trials/show-all", response_class=HTMLResponse, summary="Exibir resultados de todos os alunos")
+@app.get("/trials/show-all", response_class=HTMLResponse)
 def show_all(request: Request):
-    resultados  = obter_todos_resultados()
-    estatisticas = calcular_estatisticas_turma(resultados)
-
+    resultados = obter_resultados()
     return templates.TemplateResponse(
-        request=request,
-        name="show_all.html",
+        request=request, 
+        name="show_all.html", 
         context={
-            "resultados":    resultados,
-            "total_alunos":  len(resultados),
-            "total_questoes": TOTAL_QUESTOES,
-            "stats":         estatisticas,
-        },
+            "resultados": resultados, 
+            "total_alunos": len(resultados),
+            "total_questoes": 10,
+            "stats": calcular_estatisticas_turma(resultados)
+        }
     )
