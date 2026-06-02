@@ -42,3 +42,14 @@ def show_all(request: Request):
             "stats": calcular_estatisticas_turma(resultados)
         }
     )
+
+from services import obter_prova_ativa, formatar_prova_json
+
+@app.get("/trials/{prova_id}")
+def get_prova_por_id(prova_id: int):
+    prova = obter_prova_ativa()
+    if not prova:
+        raise HTTPException(status_code=404, detail="Prova não encontrada")
+    
+    # Retorna o JSON formatado conforme solicitado
+    return formatar_prova_json(prova)

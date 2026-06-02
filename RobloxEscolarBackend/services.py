@@ -62,3 +62,16 @@ def calcular_estatisticas_turma(resultados: List[Dict[str, Any]]) -> Dict[str, A
     if not resultados: return {"media": 0.0, "maior_nota": 0.0}
     notas = [r["nota"] for r in resultados]
     return {"media": sum(notas) / len(notas), "maior_nota": max(notas)}
+
+def formatar_prova_json(prova: Dict[str, Any]) -> Dict[str, Any]:
+    # Retorna apenas o necessário: nome e lista de questões
+    return {
+        "nome": prova.get("nome_prova"),
+        "questoes": [
+            {
+                "enunciado": q["enunciado"],
+                "alternativas": q["alternativas"]
+            }
+            for q in prova["questoes"]
+        ]
+    }
