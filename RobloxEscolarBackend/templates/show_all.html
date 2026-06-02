@@ -76,8 +76,8 @@
     {% for r in resultados %}
     {% set idx = loop.index0 %}
 
-    {% set pct_acertos = (r.acertos / total_questoes * 100) | round(1) %}
-    {% set pct_erros   = (r.erros   / total_questoes * 100) | round(1) %}
+    {% set pct_acertos = (r.nota / total_questoes * 100) | round(1) %}
+    {% set pct_erros   = (100 - pct_acertos) | round(1) %}
 
     <div class="aluno-card" id="card-{{ idx }}">
 
