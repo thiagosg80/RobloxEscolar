@@ -5,6 +5,7 @@
   <title>Cadastrar Prova — RobloxEscolarBackend</title>
   <link rel="stylesheet" href="/static/style.css">
   <style>
+    /* Estilos locais para garantir que a estrutura não quebre */
     .q-box { 
       background: var(--surface); 
       padding: 24px; 
@@ -40,34 +41,10 @@
   </form>
 </main>
 
-<script>
-  const container = document.getElementById('containerQuestoes');
-  for(let i = 1; i <= 10; i++) {
-    container.innerHTML += `
-      <div class="q-box">
-        <h3 class="section-heading" style="margin-top:0;">Questão ${i}</h3>
-        <input type="text" class="enunciado" placeholder="Enunciado da questão..." required style="width:100%; box-sizing:border-box; margin-bottom:16px;">
-        <div class="alternativas-inputs">
-           ${['A','B','C','D','E'].map((l, idx) => `
-             <div class="alt-row">
-               <input type="radio" name="c_${i}" value="${idx}" required> 
-               <input type="text" class="alt-text" placeholder="Opção ${l}" style="flex:1;">
-             </div>
-           `).join('')}
-        </div>
-      </div>`;
-  }
-  document.getElementById('formProva').onsubmit = async (e) => {
-    e.preventDefault();
-    const questoes = Array.from(document.querySelectorAll('.q-box')).map(box => ({
-      enunciado: box.querySelector('.enunciado').value,
-      alternativas: Array.from(box.querySelectorAll('.alt-text')).map(input => input.value),
-      correta: parseInt(box.querySelector('input[type="radio"]:checked').value)
-    }));
-    await fetch('/prova/criar', { method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ nome_prova: document.getElementById('nomeProva').value, questoes })});
-    window.location.href = '/trials/show-all';
-  };
-</script>
+  {% if prova %}
+    <div id="dados-edicao" style="display:none;" data-prova='{{ prova | tojson }}'></div>
+  {% endif %}
+
+<script src="/static/form_prova.js"></script>
 </body>
 </html>

@@ -4,10 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from models import Prova, Trial
 from services import (
-    registrar_nova_prova, 
-    registrar_respostas_aluno, 
-    obter_resultados, 
-    calcular_estatisticas_turma
+    registrar_nova_prova, registrar_respostas_aluno, obter_resultados, 
+    calcular_estatisticas_turma, obter_prova_ativa
 )
 
 app = FastAPI()
@@ -27,11 +25,15 @@ def post_trial(trial: Trial):
 def get_form_prova(request: Request):
     return templates.TemplateResponse(request=request, name="form_prova.html")
 
+@app.get("/prova/editar", response_class=HTMLResponse)
+def editar_prova_get(request: Request):
+    return templates.TemplateResponse(request=request, name="form_prova.html", context={"prova": obter_prova_ativa()})
+
 @app.get("/trials/show-all", response_class=HTMLResponse)
 def show_all(request: Request):
     resultados = obter_resultados()
     return templates.TemplateResponse(
-        request=request, 
+        request=request,
         name="show_all.html", 
         context={
             "resultados": resultados, 

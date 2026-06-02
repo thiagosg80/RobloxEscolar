@@ -3,8 +3,8 @@ from pydantic import BaseModel, model_validator
 
 class Questao(BaseModel):
     enunciado: str
-    alternativas: List[str]  # Lista com 5 enunciados de alternativas
-    correta: int             # Índice da alternativa correta (0 a 4)
+    alternativas: List[str]
+    correta: int
 
     @model_validator(mode="after")
     def validar_estrutura(self) -> "Questao":
@@ -26,4 +26,4 @@ class Prova(BaseModel):
 
 class Trial(BaseModel):
     nome: str
-    respostas: Dict[int, str] # {1: "A", 2: "B"...} mapeado para o índice da alternativa
+    respostas: Dict[int, str]
